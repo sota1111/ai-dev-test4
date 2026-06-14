@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeQuest Ops - AI街歩きエージェントプラットフォーム</title>
+    <title>TimeQuest Ops - デモ体験</title>
     <style>
         :root {
             --primary: #00d2ff;
@@ -13,6 +13,8 @@
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #2dd4bf;
+            --info-bg: rgba(0, 210, 255, 0.1);
+            --info-border: rgba(0, 210, 255, 0.3);
         }
 
         * {
@@ -35,399 +37,616 @@
             padding: 0 20px;
         }
 
-        /* Hero Section */
-        header {
-            height: 100vh;
-            display: flex;
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 1rem; }
+        .mt-2 { margin-top: 2rem; }
+        .mb-1 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 2rem; }
+
+        /* Info Button & Panel */
+        .info-container {
+            position: relative;
+            margin: 0.5rem 0;
+        }
+
+        .info-btn {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 4px;
+            background: none;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .info-btn:hover {
+            background: var(--info-bg);
+        }
+
+        .info-panel {
+            display: none;
+            background: var(--info-bg);
+            border: 1px solid var(--info-border);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 60px 0;
             text-align: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Smartphone Mockup */
+        .demo-section {
+            padding: 40px 0;
+            background: #0b1120;
+        }
+
+        .phone-frame {
+            width: 320px;
+            height: 640px;
+            background: #000;
+            border: 8px solid #334155;
+            border-radius: 36px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-screen {
+            flex: 1;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Map View */
+        .map-container {
+            height: 60%;
+            background: #1e293b;
             position: relative;
             overflow: hidden;
         }
 
-        header::before {
-            content: "";
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            width: 200%;
+            height: 200%;
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.1) 0%, transparent 70%);
+            top: -50%;
+            left: -50%;
         }
 
-        .hero-content h1 {
-            font-size: clamp(2.5rem, 8vw, 4.5rem);
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .map-cell {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .road { background: #334155; }
+        .building { background: #1e293b; }
+        .green { background: #064e3b; }
+
+        .player-marker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            z-index: 10;
+            filter: drop-shadow(0 0 5px var(--primary));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .quest-marker {
+            position: absolute;
+            font-size: 1.2rem;
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        /* Quest Card */
+        .quest-card {
+            flex: 1;
+            background: var(--card-bg);
+            margin: 10px;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 20;
+        }
+
+        .quest-header {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .quest-title {
+            font-size: 1.1rem;
             font-weight: 800;
         }
 
-        .hero-content p {
-            font-size: clamp(1.1rem, 3vw, 1.5rem);
+        .quest-meta {
+            font-size: 0.75rem;
             color: var(--text-muted);
-            max-width: 700px;
-            margin: 0 auto 2rem;
+            display: flex;
+            gap: 10px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: rgba(45, 212, 191, 0.1);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-            border-radius: 2rem;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
+        .quest-desc {
+            font-size: 0.85rem;
+            margin-top: 5px;
         }
 
-        /* Section Styling */
-        section {
-            padding: 100px 0;
+        .btn-group {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
         }
 
-        h2 {
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            text-align: center;
-            position: relative;
+        .btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
         }
 
-        h2::after {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 4px;
-            background: var(--primary);
-            border-radius: 2px;
+        .btn-primary { background: var(--primary); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text); }
+
+        /* Step Tabs */
+        .steps-section { padding: 80px 0; }
+        .step-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
 
-        /* Cards Grid */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+        .step-tab {
+            padding: 10px 20px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
         }
 
-        .card {
+        .step-tab.active {
+            background: var(--info-bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .step-content {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
             background: var(--card-bg);
             padding: 2rem;
-            border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            display: block;
-        }
-
-        .card h3 {
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-
-        /* Problem Section */
-        .problem-list {
-            list-style: none;
-        }
-
-        .problem-item {
-            display: flex;
-            align-items: center;
-            background: rgba(239, 68, 68, 0.05);
-            border-left: 4px solid #ef4444;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: 0 0.5rem 0.5rem 0;
-        }
-
-        .problem-item span {
-            font-size: 1.5rem;
-            margin-right: 1.5rem;
-        }
-
-        /* Flow Diagram */
-        .flow-container {
-            background: var(--card-bg);
-            padding: 3rem;
-            border-radius: 1rem;
+            border-radius: 16px;
             text-align: center;
-            margin-top: 2rem;
         }
 
-        .flow {
+        .step-content.active { display: block; }
+
+        /* Walkthrough */
+        .walkthrough {
+            background: rgba(255,255,255,0.02);
+            padding: 80px 0;
+        }
+
+        .chat-container {
+            max-width: 500px;
+            margin: 0 auto;
             display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .flow-step {
-            padding: 1rem;
-            border: 2px dashed var(--text-muted);
-            border-radius: 0.5rem;
-            min-width: 150px;
-        }
-
-        .flow-arrow {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-
-        /* Agent Section */
-        .agent-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            flex-direction: column;
             gap: 1.5rem;
         }
 
-        .agent-card {
-            text-align: center;
-            padding: 2rem;
-            background: linear-gradient(180deg, var(--card-bg) 0%, rgba(30, 41, 59, 0.5) 100%);
+        .chat-bubble {
+            padding: 1rem;
             border-radius: 1rem;
+            max-width: 85%;
+            position: relative;
         }
 
-        .agent-avatar {
-            width: 80px;
-            height: 80px;
-            background: var(--bg);
-            border-radius: 50%;
+        .ai-bubble {
+            background: var(--card-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+            border: 1px solid var(--secondary);
+        }
+
+        .user-bubble {
+            background: var(--secondary);
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+
+        .chat-img {
+            width: 100%;
+            height: 150px;
+            background: #334155;
+            border-radius: 8px;
+            margin-top: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 2.5rem;
-            border: 2px solid var(--primary);
+            color: var(--text-muted);
+            border: 2px dashed var(--text-muted);
         }
 
-        /* Tech Stack */
-        .tech-grid {
+        /* Agent Cards */
+        .agents-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .agent-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .tech-item {
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 0.5rem;
+        .agent-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* CTA */
+        .cta {
+            padding: 100px 0;
+            text-align: center;
+            background: linear-gradient(0deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 1rem 3rem;
+            background: var(--primary);
+            color: #000;
+            text-decoration: none;
+            border-radius: 50px;
             font-weight: bold;
+            font-size: 1.2rem;
+            transition: transform 0.2s;
         }
 
-        /* DevOps */
-        .devops-box {
-            background: #000;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            font-family: monospace;
-            color: #10b981;
-            border-left: 4px solid #10b981;
-        }
+        .cta-btn:hover { transform: scale(1.05); }
 
         footer {
-            padding: 50px 0;
+            padding: 40px 0;
             text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255,255,255,0.1);
             color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
-        @media (max-width: 768px) {
-            .flow {
-                flex-direction: column;
-            }
-            .flow-arrow {
-                transform: rotate(90deg);
-            }
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2rem; }
+            .phone-frame { width: 280px; height: 560px; }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="container hero-content">
-            <span class="badge">AI × GPS × Street Quest</span>
+    <section class="hero">
+        <div class="container">
             <h1>TimeQuest Ops</h1>
-            <p>AIエージェントが、あなたの歩く街を冒険の舞台に変える。歴史、文化、発見が詰まった次世代の街歩きプラットフォーム。</p>
-            <div style="margin-top: 2rem;">
-                <a href="#problem" style="text-decoration: none; color: white; background: var(--secondary); padding: 1rem 2rem; border-radius: 2rem; font-weight: bold;">コンセプトを見る</a>
-            </div>
-        </div>
-    </header>
-
-    <section id="problem">
-        <div class="container">
-            <h2>The Problem</h2>
-            <div class="problem-list">
-                <div class="problem-item">
-                    <span>🏛️</span>
-                    <div>
-                        <strong>資源の埋没</strong>
-                        <p>地域の貴重な歴史や文化資源が、日常の中に埋もれて見過ごされています。</p>
-                    </div>
-                </div>
-                <div class="problem-item">
-                    <span>📍</span>
-                    <div>
-                        <strong>観光の偏り</strong>
-                        <p>有名な観光スポットに人が集中し、路地裏や地域の魅力が十分に伝わっていません。</p>
-                    </div>
-                </div>
-                <div class="problem-item">
-                    <span>♿</span>
-                    <div>
-                        <strong>視点の欠如</strong>
-                        <p>防災やバリアフリー、歴史的な背景など、多角的な視点で街を見る機会が不足しています。</p>
-                    </div>
+            <p>AIが生成する街歩きクエスト</p>
+            <div class="info-container">
+                <button class="info-btn">ℹ️ コンセプト詳細</button>
+                <div class="info-panel">
+                    TimeQuest Opsは、Gemini AIを活用したリアルタイム街歩き体験プラットフォームです。<br>
+                    単なるスタンプラリーではなく、その場所の文脈（歴史、建築、文化）をAIが読み解き、パーソナライズされた挑戦を提供します。
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="solution" style="background: rgba(255,255,255,0.02);">
+    <section class="demo-section">
         <div class="container">
-            <h2>The Solution</h2>
-            <p style="text-align: center; margin-bottom: 3rem; font-size: 1.2rem;">Gemini がリアルタイムに街の文脈を読み解き、パーソナライズされたクエストを生成します。</p>
+            <h2 class="text-center mb-2">実際のゲーム画面</h2>
             
-            <div class="flow-container">
-                <div class="flow">
-                    <div class="flow-step">
-                        <strong>GPS取得</strong><br>現在地を特定
+            <div class="phone-frame">
+                <div class="phone-screen">
+                    <div class="map-container">
+                        <div class="map-grid">
+                            <!-- JS will populate or we use CSS grid directly -->
+                            <div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div>
+                            <div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div>
+                            <div class="map-cell building"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell green"></div><div class="map-cell green"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell building"></div>
+                            <div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div>
+                            <div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div>
+                        </div>
+                        <div class="player-marker">📍</div>
+                        <div class="quest-marker" style="top: 30%; left: 40%;">🎯</div>
+                        <div class="quest-marker" style="top: 60%; left: 70%;">🎯</div>
+                        <div class="quest-marker" style="top: 20%; left: 80%;">🎯</div>
                     </div>
-                    <div class="flow-arrow">➜</div>
-                    <div class="flow-step">
-                        <strong>Gemini生成</strong><br>街の特徴からクイズ
+                    
+                    <div class="quest-card">
+                        <div class="quest-header">📜 Quest #1: 明治の名残</div>
+                        <div class="quest-meta">
+                            <span>🎯 難易度: ★★☆☆☆</span>
+                            <span>📍 距離: 150m</span>
+                        </div>
+                        <div class="quest-title">赤レンガの記憶を探せ</div>
+                        <div class="quest-desc">
+                            「この交差点の角にある建物は、明治時代に銀行として使われていました。その特徴的な意匠を写真に撮ろう！」
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-primary">📷 写真を撮る</button>
+                            <button class="btn btn-outline">💡 ヒント</button>
+                        </div>
                     </div>
-                    <div class="flow-arrow">➜</div>
-                    <div class="flow-step">
-                        <strong>ユーザー投稿</strong><br>写真や回答を送信
-                    </div>
-                    <div class="flow-arrow">➜</div>
-                    <div class="flow-step">
-                        <strong>AI評価</strong><br>フィードバック・成長
+
+                    <div style="padding: 0 15px 10px;">
+                        <div class="info-container">
+                            <button class="info-btn">ℹ️ ゲーム画面について</button>
+                            <div class="info-panel">
+                                <strong>マップ:</strong> GPSと連動し、近くのスポットにクエストが自動出現。<br>
+                                <strong>クエストカード:</strong> AIがその場の歴史データから、やるべきアクションを動的に生成します。
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="agents">
+    <section class="steps-section">
         <div class="container">
-            <h2>AI Agents</h2>
-            <div class="agent-grid">
+            <h2 class="text-center mb-2">ゲームの流れ</h2>
+            
+            <div class="step-tabs">
+                <div class="step-tab active" onclick="showStep(1)">🚶 1. 街を歩く</div>
+                <div class="step-tab" onclick="showStep(2)">🤖 2. クエスト生成</div>
+                <div class="step-tab" onclick="showStep(3)">📷 3. 写真で挑戦</div>
+                <div class="step-tab" onclick="showStep(4)">🏆 4. フィードバック</div>
+            </div>
+
+            <div id="step-1" class="step-content active">
+                <h3>GPSで街を探索</h3>
+                <p class="mt-1">特別な目的地は不要。街を歩くだけで、あなたの周囲にAIが歴史や文化の接点を見つけ出します。</p>
+                <div class="info-container mt-1">
+                    <button class="info-btn">ℹ️ 仕組み</button>
+                    <div class="info-panel">
+                        バックグラウンドでGPS座標を監視。一定距離を移動するか、興味深いスポットに近づくと、Quest Plannerエージェントが起動します。
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-2" class="step-content">
+                <h3>リアルタイム生成</h3>
+                <p class="mt-1">Gemini AIが周辺の歴史データベースと連携し、10秒以内にオリジナルのクエストを組み立てます。</p>
+                <div class="info-container mt-1">
+                    <button class="info-btn">ℹ️ 仕組み</button>
+                    <div class="info-panel">
+                        Google Maps PlatformのPOIデータと、Geminiの広範な知識を組み合わせ、その場所ならではの問いを作成します。
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-3" class="step-content">
+                <h3>Vision AIによる判定</h3>
+                <p class="mt-1">撮影した写真をアップロードすると、Gemini Visionが内容を解析。正しい対象が写っているか即座に判定します。</p>
+                <div class="info-container mt-1">
+                    <button class="info-btn">ℹ️ 仕組み</button>
+                    <div class="info-panel">
+                        単なる位置情報だけでなく、「建物の特徴」や「彫刻の細部」など、目視に近い精度でクエスト達成を確認します。
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-4" class="step-content">
+                <h3>深い歴史解説</h3>
+                <p class="mt-1">正解判定とともに、そのスポットにまつわる物語をAIが提供。街歩きが深い学習体験に変わります。</p>
+                <div class="info-container mt-1">
+                    <button class="info-btn">ℹ️ 仕組み</button>
+                    <div class="info-panel">
+                        ユーザーの習熟度や興味に合わせて解説を調整。歩けば歩くほど、あなたの「街の解像度」が上がっていきます。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="walkthrough">
+        <div class="container">
+            <h2 class="text-center mb-2">クエスト体験の流れ</h2>
+            
+            <div class="chat-container">
+                <div class="ai-bubble chat-bubble">
+                    <strong>🤖 AIガイド</strong>
+                    <p>「👋 新しいクエスト発見！ 渋谷の隠れた明治遺産を探してみませんか？」</p>
+                </div>
+
+                <div class="ai-bubble chat-bubble">
+                    <strong>📜 クエスト内容</strong>
+                    <p>「渋谷駅のすぐ近くに、明治30年代に建てられた数少ない石造りの構造物があります。それを見つけて写真を撮ってください！」</p>
+                </div>
+
+                <div class="user-bubble chat-bubble">
+                    <strong>👤 プレイヤー</strong>
+                    <p>（あ、これかな？ 古い橋の柱っぽい...）</p>
+                    <div class="chat-img">📷 写真をアップロード中...</div>
+                </div>
+
+                <div class="ai-bubble chat-bubble">
+                    <strong>✅ クエスト達成！</strong>
+                    <p>「正解です！ これは1902年に竣工した旧稲荷橋の親柱です。当時の渋谷川の流れを今に伝える貴重な遺構なんですよ。」</p>
+                    <div class="info-container">
+                        <button class="info-btn">ℹ️ 判定の裏側</button>
+                        <div class="info-panel">
+                            Gemini Visionが「石造りの親柱」「特徴的な形状」を認識し、事前にQuest Plannerが設定した正解条件と合致するかを判定しています。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="agents-section">
+        <div class="container">
+            <h2 class="text-center">4つのAIエージェント</h2>
+            <div class="agents-grid">
                 <div class="agent-card">
-                    <div class="agent-avatar">🗺️</div>
+                    <span class="agent-icon">🗺️</span>
                     <h3>Quest Planner</h3>
-                    <p>現在地と周辺DBから、その場に最適なクエストを設計。</p>
+                    <p>クエストの設計・生成</p>
+                    <div class="info-container">
+                        <button class="info-btn">ℹ️ 詳細</button>
+                        <div class="info-panel">位置情報と歴史DBから「何を撮るか」「何を解くか」を企画する司令塔。</div>
+                    </div>
                 </div>
                 <div class="agent-card">
-                    <div class="agent-avatar">🎙️</div>
+                    <span class="agent-icon">🎙️</span>
                     <h3>Quest Guide</h3>
-                    <p>ユーザーの投稿をVisionで解析し、ヒントや解説を提供。</p>
+                    <p>ヒントと解説の提供</p>
+                    <div class="info-container">
+                        <button class="info-btn">ℹ️ 詳細</button>
+                        <div class="info-panel">Vision AIでユーザーの状況を把握し、詰まっているときはヒント、達成時は解説を担当。</div>
+                    </div>
                 </div>
                 <div class="agent-card">
-                    <div class="agent-avatar">🛡️</div>
+                    <span class="agent-icon">🛡️</span>
                     <h3>Quest QA</h3>
-                    <p>生成された内容の安全性、事実性、表現を厳格にチェック。</p>
+                    <p>品質と安全の番人</p>
+                    <div class="info-container">
+                        <button class="info-btn">ℹ️ 詳細</button>
+                        <div class="info-panel">生成されたクエストが私有地に入っていないか、差別的でないか、事実誤認がないかを検証。</div>
+                    </div>
                 </div>
                 <div class="agent-card">
-                    <div class="agent-avatar">📈</div>
+                    <span class="agent-icon">📈</span>
                     <h3>Quest Ops</h3>
-                    <p>利用データから「盛り上がったポイント」を分析し改善を提案。</p>
+                    <p>運営分析と改善</p>
+                    <div class="info-container">
+                        <button class="info-btn">ℹ️ 詳細</button>
+                        <div class="info-panel">ユーザーの反応を分析し、どの種類のクエストが好まれるかを学習。プロンプトを自動調整。</div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="tech" style="background: rgba(255,255,255,0.02);">
+    <section class="cta">
         <div class="container">
-            <h2>Tech Stack</h2>
-            <div class="tech-grid">
-                <div class="tech-item">Flutter / Web</div>
-                <div class="tech-item">Cloud Run</div>
-                <div class="tech-item">Gemini API</div>
-                <div class="tech-item">Gemini Vision</div>
-                <div class="tech-item">Firebase</div>
-                <div class="tech-item">Cloud Storage</div>
-                <div class="tech-item">GitHub Actions</div>
-                <div class="tech-item">ADK</div>
-            </div>
-        </div>
-    </section>
-
-    <section id="features">
-        <div class="container">
-            <h2>MVP Features</h2>
-            <div class="grid">
-                <div class="card">
-                    <span class="card-icon">📡</span>
-                    <h3>現在地クエスト</h3>
-                    <p>GPS連動で、今いる場所が即座に冒険のフィールドに。</p>
-                </div>
-                <div class="card">
-                    <span class="card-icon">📷</span>
-                    <h3>写真判定</h3>
-                    <p>Gemini Visionが、あなたの撮った写真からクエスト達成を確認。</p>
-                </div>
-                <div class="card">
-                    <span class="card-icon">💬</span>
-                    <h3>AIフィードバック</h3>
-                    <p>単なる正解・不正解ではなく、街の歴史に触れる深い解説。</p>
-                </div>
-                <div class="card">
-                    <span class="card-icon">📖</span>
-                    <h3>ウォーキング物語</h3>
-                    <p>一日の終わりに、あなたの歩いた軌跡を物語として生成。</p>
-                </div>
-                <div class="card">
-                    <span class="card-icon">📊</span>
-                    <h3>Opsダッシュボード</h3>
-                    <p>運営者がクエストの質を監視し、AIプロンプトを継続改善。</p>
-                </div>
-                <div class="card">
-                    <span class="card-icon">🚀</span>
-                    <h3>CI/CD配信</h3>
-                    <p>新クエスト定義やAI調整を、GitHubから即座にデプロイ。</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="devops">
-        <div class="container">
-            <h2>DevOps Flow</h2>
-            <div class="devops-box">
-                $ git push origin main<br>
-                > GitHub Actions Triggered...<br>
-                > Running Quest QA Agent Check... [PASS]<br>
-                > Building Container with Cloud Build...<br>
-                > Deploying to Cloud Run...<br>
-                > Service Live at: timequest-ops.run.app
-            </div>
+            <h2>街の物語を解き明かそう</h2>
+            <p class="mb-2 mt-1">TimeQuest Ops は開発中のプロジェクトです。</p>
+            <a href="#" class="cta-btn">GitHub で見る</a>
+            <p class="mt-2" style="font-size: 0.8rem; color: var(--text-muted);">※ このページ自体がプロジェクトのデモとして機能しています</p>
         </div>
     </section>
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 TimeQuest Ops. Built for AI Agent Hackathon.</p>
+            <p>&copy; 2026 TimeQuest Ops. Powered by Gemini AI.</p>
         </div>
     </footer>
 
+    <script>
+        // Info Button Interactivity
+        document.querySelectorAll('.info-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const panel = btn.nextElementSibling;
+                const isVisible = panel.style.display === 'block';
+                
+                // Close all other panels in the same scope maybe? (Optional)
+                
+                panel.style.display = isVisible ? 'none' : 'block';
+                btn.textContent = isVisible ? 'ℹ️ 詳細' : '✖️ 閉じる';
+                
+                // Specific text for some buttons
+                if (btn.closest('.hero')) {
+                    btn.textContent = isVisible ? 'ℹ️ コンセプト詳細' : '✖️ 閉じる';
+                }
+                if (btn.closest('.phone-screen')) {
+                    btn.textContent = isVisible ? 'ℹ️ ゲーム画面について' : '✖️ 閉じる';
+                }
+                if (btn.closest('.step-content')) {
+                    btn.textContent = isVisible ? 'ℹ️ 仕組み' : '✖️ 閉じる';
+                }
+            });
+        });
+
+        // Step Tabs Interactivity
+        function showStep(stepNum) {
+            // Update tabs
+            document.querySelectorAll('.step-tab').forEach((tab, index) => {
+                if (index + 1 === stepNum) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.step-content').forEach((content, index) => {
+                if (index + 1 === stepNum) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
