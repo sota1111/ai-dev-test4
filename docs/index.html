@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeQuest Ops - AI街歩きエージェントプラットフォーム</title>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #2dd4bf;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        header {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.1) 0%, transparent 70%);
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .hero-content p {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(45, 212, 191, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Section Styling */
+        section {
+            padding: 100px 0;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        h2::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Cards Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        /* Problem Section */
+        .problem-list {
+            list-style: none;
+        }
+
+        .problem-item {
+            display: flex;
+            align-items: center;
+            background: rgba(239, 68, 68, 0.05);
+            border-left: 4px solid #ef4444;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .problem-item span {
+            font-size: 1.5rem;
+            margin-right: 1.5rem;
+        }
+
+        /* Flow Diagram */
+        .flow-container {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .flow-step {
+            padding: 1rem;
+            border: 2px dashed var(--text-muted);
+            border-radius: 0.5rem;
+            min-width: 150px;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* Agent Section */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .agent-card {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(180deg, var(--card-bg) 0%, rgba(30, 41, 59, 0.5) 100%);
+            border-radius: 1rem;
+        }
+
+        .agent-avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+            border: 2px solid var(--primary);
+        }
+
+        /* Tech Stack */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .tech-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0.5rem;
+            font-weight: bold;
+        }
+
+        /* DevOps */
+        .devops-box {
+            background: #000;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            color: #10b981;
+            border-left: 4px solid #10b981;
+        }
+
+        footer {
+            padding: 50px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .flow {
+                flex-direction: column;
+            }
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container hero-content">
+            <span class="badge">AI × GPS × Street Quest</span>
+            <h1>TimeQuest Ops</h1>
+            <p>AIエージェントが、あなたの歩く街を冒険の舞台に変える。歴史、文化、発見が詰まった次世代の街歩きプラットフォーム。</p>
+            <div style="margin-top: 2rem;">
+                <a href="#problem" style="text-decoration: none; color: white; background: var(--secondary); padding: 1rem 2rem; border-radius: 2rem; font-weight: bold;">コンセプトを見る</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="problem">
+        <div class="container">
+            <h2>The Problem</h2>
+            <div class="problem-list">
+                <div class="problem-item">
+                    <span>🏛️</span>
+                    <div>
+                        <strong>資源の埋没</strong>
+                        <p>地域の貴重な歴史や文化資源が、日常の中に埋もれて見過ごされています。</p>
+                    </div>
+                </div>
+                <div class="problem-item">
+                    <span>📍</span>
+                    <div>
+                        <strong>観光の偏り</strong>
+                        <p>有名な観光スポットに人が集中し、路地裏や地域の魅力が十分に伝わっていません。</p>
+                    </div>
+                </div>
+                <div class="problem-item">
+                    <span>♿</span>
+                    <div>
+                        <strong>視点の欠如</strong>
+                        <p>防災やバリアフリー、歴史的な背景など、多角的な視点で街を見る機会が不足しています。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="solution" style="background: rgba(255,255,255,0.02);">
+        <div class="container">
+            <h2>The Solution</h2>
+            <p style="text-align: center; margin-bottom: 3rem; font-size: 1.2rem;">Gemini がリアルタイムに街の文脈を読み解き、パーソナライズされたクエストを生成します。</p>
+            
+            <div class="flow-container">
+                <div class="flow">
+                    <div class="flow-step">
+                        <strong>GPS取得</strong><br>現在地を特定
+                    </div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-step">
+                        <strong>Gemini生成</strong><br>街の特徴からクイズ
+                    </div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-step">
+                        <strong>ユーザー投稿</strong><br>写真や回答を送信
+                    </div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-step">
+                        <strong>AI評価</strong><br>フィードバック・成長
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="agents">
+        <div class="container">
+            <h2>AI Agents</h2>
+            <div class="agent-grid">
+                <div class="agent-card">
+                    <div class="agent-avatar">🗺️</div>
+                    <h3>Quest Planner</h3>
+                    <p>現在地と周辺DBから、その場に最適なクエストを設計。</p>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-avatar">🎙️</div>
+                    <h3>Quest Guide</h3>
+                    <p>ユーザーの投稿をVisionで解析し、ヒントや解説を提供。</p>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-avatar">🛡️</div>
+                    <h3>Quest QA</h3>
+                    <p>生成された内容の安全性、事実性、表現を厳格にチェック。</p>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-avatar">📈</div>
+                    <h3>Quest Ops</h3>
+                    <p>利用データから「盛り上がったポイント」を分析し改善を提案。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tech" style="background: rgba(255,255,255,0.02);">
+        <div class="container">
+            <h2>Tech Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-item">Flutter / Web</div>
+                <div class="tech-item">Cloud Run</div>
+                <div class="tech-item">Gemini API</div>
+                <div class="tech-item">Gemini Vision</div>
+                <div class="tech-item">Firebase</div>
+                <div class="tech-item">Cloud Storage</div>
+                <div class="tech-item">GitHub Actions</div>
+                <div class="tech-item">ADK</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="container">
+            <h2>MVP Features</h2>
+            <div class="grid">
+                <div class="card">
+                    <span class="card-icon">📡</span>
+                    <h3>現在地クエスト</h3>
+                    <p>GPS連動で、今いる場所が即座に冒険のフィールドに。</p>
+                </div>
+                <div class="card">
+                    <span class="card-icon">📷</span>
+                    <h3>写真判定</h3>
+                    <p>Gemini Visionが、あなたの撮った写真からクエスト達成を確認。</p>
+                </div>
+                <div class="card">
+                    <span class="card-icon">💬</span>
+                    <h3>AIフィードバック</h3>
+                    <p>単なる正解・不正解ではなく、街の歴史に触れる深い解説。</p>
+                </div>
+                <div class="card">
+                    <span class="card-icon">📖</span>
+                    <h3>ウォーキング物語</h3>
+                    <p>一日の終わりに、あなたの歩いた軌跡を物語として生成。</p>
+                </div>
+                <div class="card">
+                    <span class="card-icon">📊</span>
+                    <h3>Opsダッシュボード</h3>
+                    <p>運営者がクエストの質を監視し、AIプロンプトを継続改善。</p>
+                </div>
+                <div class="card">
+                    <span class="card-icon">🚀</span>
+                    <h3>CI/CD配信</h3>
+                    <p>新クエスト定義やAI調整を、GitHubから即座にデプロイ。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="devops">
+        <div class="container">
+            <h2>DevOps Flow</h2>
+            <div class="devops-box">
+                $ git push origin main<br>
+                > GitHub Actions Triggered...<br>
+                > Running Quest QA Agent Check... [PASS]<br>
+                > Building Container with Cloud Build...<br>
+                > Deploying to Cloud Run...<br>
+                > Service Live at: timequest-ops.run.app
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 TimeQuest Ops. Built for AI Agent Hackathon.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
