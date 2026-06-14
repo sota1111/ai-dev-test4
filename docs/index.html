@@ -3,650 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeQuest Ops - デモ体験</title>
+    <title>TimeQuest Ops Demo</title>
     <style>
         :root {
-            --primary: #00d2ff;
-            --secondary: #3a7bd5;
             --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
+            --card: #1e293b;
+            --primary: #00d2ff;
             --accent: #2dd4bf;
-            --info-bg: rgba(0, 210, 255, 0.1);
-            --info-border: rgba(0, 210, 255, 0.3);
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --road: #334155;
+            --building: #1e293b;
+            --green: #064e3b;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Utility Classes */
-        .text-center { text-align: center; }
-        .mt-1 { margin-top: 1rem; }
-        .mt-2 { margin-top: 2rem; }
-        .mb-1 { margin-bottom: 1rem; }
-        .mb-2 { margin-bottom: 2rem; }
-
-        /* Info Button & Panel */
-        .info-container {
-            position: relative;
-            margin: 0.5rem 0;
-        }
-
-        .info-btn {
-            display: inline-flex;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 4px;
-            background: none;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
+            overflow: hidden;
         }
 
-        .info-btn:hover {
-            background: var(--info-bg);
-        }
-
-        .info-panel {
-            display: none;
-            background: var(--info-bg);
-            border: 1px solid var(--info-border);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text);
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 60px 0;
-            text-align: center;
-            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-
-        .hero p {
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Smartphone Mockup */
-        .demo-section {
-            padding: 40px 0;
-            background: #0b1120;
-        }
-
+        /* Phone Frame */
         .phone-frame {
             width: 320px;
             height: 640px;
-            background: #000;
             border: 8px solid #334155;
             border-radius: 36px;
-            margin: 0 auto;
+            overflow: hidden;
             position: relative;
+            background-color: #000;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
-        .phone-screen {
-            flex: 1;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
+        .phone-inner {
+            width: 100%;
+            height: 100%;
             position: relative;
+            background-color: var(--bg);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Map View */
+        /* Top HUD */
+        .hud-bar {
+            height: 40px;
+            background-color: rgba(15, 23, 42, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hud-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .player-icon {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+        }
+
+        .hud-center {
+            color: var(--primary);
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hud-right {
+            color: #fbbf24;
+        }
+
+        /* Map Area */
         .map-container {
-            height: 60%;
-            background: #1e293b;
+            flex: 1;
             position: relative;
             overflow: hidden;
+            background-color: var(--green);
         }
 
         .map-grid {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             grid-template-rows: repeat(10, 1fr);
-            width: 200%;
-            height: 200%;
-            position: absolute;
-            top: -50%;
-            left: -50%;
+            width: 100%;
+            height: 100%;
         }
 
-        .map-cell {
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .cell {
+            border: 0.1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .road { background: #334155; }
-        .building { background: #1e293b; }
-        .green { background: #064e3b; }
+        .cell.road { background-color: var(--road); }
+        .cell.building { background-color: var(--building); }
 
         .player-marker {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            z-index: 10;
-            filter: drop-shadow(0 0 5px var(--primary));
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+            width: 32px;
+            height: 32px;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 4s linear;
+            z-index: 5;
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
         }
 
         .quest-marker {
             position: absolute;
-            font-size: 1.2rem;
-            z-index: 5;
-            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .quest-marker.visible {
+            opacity: 1;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--primary)); }
+            50% { transform: scale(1.2); filter: drop-shadow(0 0 10px var(--primary)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--primary)); }
+        }
+
+        .quest-marker.cleared::after {
+            content: '✅';
+            position: absolute;
+            font-size: 14px;
+            top: -5px;
+            right: -5px;
         }
 
         /* Quest Card */
         .quest-card {
-            flex: 1;
-            background: var(--card-bg);
-            margin: 10px;
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+            height: 40%;
+            background-color: var(--card);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            z-index: 20;
+            gap: 12px;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
+            z-index: 10;
+            transform: translateY(0);
+            transition: transform 0.5s ease-out;
         }
 
         .quest-header {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
 
         .quest-title {
-            font-size: 1.1rem;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text);
         }
 
-        .quest-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            gap: 10px;
+        .quest-status {
+            font-size: 12px;
+            color: var(--accent);
+            background: rgba(45, 212, 191, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
         }
 
-        .quest-desc {
-            font-size: 0.85rem;
-            margin-top: 5px;
+        .quest-description {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            min-height: 40px;
         }
 
-        .btn-group {
+        .progress-container {
             margin-top: auto;
+            margin-bottom: 10px;
+        }
+
+        .progress-labels {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: var(--text-dim);
         }
 
-        .btn {
-            flex: 1;
-            padding: 8px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
-        .btn-primary { background: var(--primary); color: #000; }
-        .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text); }
-
-        /* Step Tabs */
-        .steps-section { padding: 80px 0; }
-        .step-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .step-tab {
-            padding: 10px 20px;
-            background: var(--card-bg);
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-
-        .step-tab.active {
-            background: var(--info-bg);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .step-content {
-            display: none;
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 16px;
-            text-align: center;
-        }
-
-        .step-content.active { display: block; }
-
-        /* Walkthrough */
-        .walkthrough {
-            background: rgba(255,255,255,0.02);
-            padding: 80px 0;
-        }
-
-        .chat-container {
-            max-width: 500px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .chat-bubble {
-            padding: 1rem;
-            border-radius: 1rem;
-            max-width: 85%;
-            position: relative;
-        }
-
-        .ai-bubble {
-            background: var(--card-bg);
-            align-self: flex-start;
-            border-bottom-left-radius: 0;
-            border: 1px solid var(--secondary);
-        }
-
-        .user-bubble {
-            background: var(--secondary);
-            align-self: flex-end;
-            border-bottom-right-radius: 0;
-        }
-
-        .chat-img {
+        .progress-bar-bg {
             width: 100%;
-            height: 150px;
-            background: #334155;
-            border-radius: 8px;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            border: 2px dashed var(--text-muted);
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        /* Agent Cards */
-        .agents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-top: 3rem;
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.5s linear;
         }
 
-        .agent-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 1rem;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
+        .celebration {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0;
         }
 
-        .agent-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            display: block;
+        .celebration.active {
+            animation: burst 1s ease-out forwards;
         }
 
-        /* CTA */
-        .cta {
-            padding: 100px 0;
-            text-align: center;
-            background: linear-gradient(0deg, #0f172a 0%, #1e293b 100%);
+        @keyframes burst {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
         }
 
-        .cta-btn {
-            display: inline-block;
-            padding: 1rem 3rem;
-            background: var(--primary);
-            color: #000;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            transition: transform 0.2s;
+        /* Scanning effect */
+        .scanning .progress-bar-fill {
+            animation: scan 1.5s infinite;
+            width: 30% !important;
         }
 
-        .cta-btn:hover { transform: scale(1.05); }
-
-        footer {
-            padding: 40px 0;
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-muted);
-            font-size: 0.9rem;
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(333%); }
         }
 
-        @media (max-width: 600px) {
-            .hero h1 { font-size: 2rem; }
-            .phone-frame { width: 280px; height: 560px; }
-        }
     </style>
 </head>
 <body>
 
-    <section class="hero">
-        <div class="container">
-            <h1>TimeQuest Ops</h1>
-            <p>AIが生成する街歩きクエスト</p>
-            <div class="info-container">
-                <button class="info-btn">ℹ️ コンセプト詳細</button>
-                <div class="info-panel">
-                    TimeQuest Opsは、Gemini AIを活用したリアルタイム街歩き体験プラットフォームです。<br>
-                    単なるスタンプラリーではなく、その場所の文脈（歴史、建築、文化）をAIが読み解き、パーソナライズされた挑戦を提供します。
+    <div class="phone-frame">
+        <div class="phone-inner">
+            <!-- HUD -->
+            <div class="hud-bar">
+                <div class="hud-left">
+                    <div class="player-icon">🏃</div>
+                    <span>Explorer Lv.3</span>
                 </div>
+                <div class="hud-center" id="hud-quest-name">探索中...</div>
+                <div class="hud-right" id="hud-score">0 pts</div>
             </div>
-        </div>
-    </section>
 
-    <section class="demo-section">
-        <div class="container">
-            <h2 class="text-center mb-2">実際のゲーム画面</h2>
-            
-            <div class="phone-frame">
-                <div class="phone-screen">
-                    <div class="map-container">
-                        <div class="map-grid">
-                            <!-- JS will populate or we use CSS grid directly -->
-                            <div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div>
-                            <div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div>
-                            <div class="map-cell building"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell green"></div><div class="map-cell green"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell building"></div>
-                            <div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div>
-                            <div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell road"></div><div class="map-cell building"></div><div class="map-cell road"></div><div class="map-cell road"></div>
-                        </div>
-                        <div class="player-marker">📍</div>
-                        <div class="quest-marker" style="top: 30%; left: 40%;">🎯</div>
-                        <div class="quest-marker" style="top: 60%; left: 70%;">🎯</div>
-                        <div class="quest-marker" style="top: 20%; left: 80%;">🎯</div>
-                    </div>
-                    
-                    <div class="quest-card">
-                        <div class="quest-header">📜 Quest #1: 明治の名残</div>
-                        <div class="quest-meta">
-                            <span>🎯 難易度: ★★☆☆☆</span>
-                            <span>📍 距離: 150m</span>
-                        </div>
-                        <div class="quest-title">赤レンガの記憶を探せ</div>
-                        <div class="quest-desc">
-                            「この交差点の角にある建物は、明治時代に銀行として使われていました。その特徴的な意匠を写真に撮ろう！」
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-primary">📷 写真を撮る</button>
-                            <button class="btn btn-outline">💡 ヒント</button>
-                        </div>
-                    </div>
+            <!-- Map -->
+            <div class="map-container" id="map">
+                <div class="map-grid" id="grid"></div>
+                <div class="player-marker" id="player">🏃</div>
+                <div class="quest-marker" id="quest-marker">📌</div>
+                <div class="celebration" id="celebration">🎉</div>
+            </div>
 
-                    <div style="padding: 0 15px 10px;">
-                        <div class="info-container">
-                            <button class="info-btn">ℹ️ ゲーム画面について</button>
-                            <div class="info-panel">
-                                <strong>マップ:</strong> GPSと連動し、近くのスポットにクエストが自動出現。<br>
-                                <strong>クエストカード:</strong> AIがその場の歴史データから、やるべきアクションを動的に生成します。
-                            </div>
-                        </div>
+            <!-- Quest Card -->
+            <div class="quest-card" id="quest-card">
+                <div class="quest-header">
+                    <div class="quest-title" id="quest-title">🔍 クエスト探索中...</div>
+                    <div class="quest-status" id="quest-status">READY</div>
+                </div>
+                <div class="quest-description" id="quest-desc">
+                    周辺の歴史的スポットを探しています...
+                </div>
+                <div class="progress-container">
+                    <div class="progress-labels">
+                        <span id="progress-left">進捗</span>
+                        <span id="progress-right">0%</span>
+                    </div>
+                    <div class="progress-bar-bg" id="progress-bar-container">
+                        <div class="progress-bar-fill" id="progress-bar-fill"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-
-    <section class="steps-section">
-        <div class="container">
-            <h2 class="text-center mb-2">ゲームの流れ</h2>
-            
-            <div class="step-tabs">
-                <div class="step-tab active" onclick="showStep(1)">🚶 1. 街を歩く</div>
-                <div class="step-tab" onclick="showStep(2)">🤖 2. クエスト生成</div>
-                <div class="step-tab" onclick="showStep(3)">📷 3. 写真で挑戦</div>
-                <div class="step-tab" onclick="showStep(4)">🏆 4. フィードバック</div>
-            </div>
-
-            <div id="step-1" class="step-content active">
-                <h3>GPSで街を探索</h3>
-                <p class="mt-1">特別な目的地は不要。街を歩くだけで、あなたの周囲にAIが歴史や文化の接点を見つけ出します。</p>
-                <div class="info-container mt-1">
-                    <button class="info-btn">ℹ️ 仕組み</button>
-                    <div class="info-panel">
-                        バックグラウンドでGPS座標を監視。一定距離を移動するか、興味深いスポットに近づくと、Quest Plannerエージェントが起動します。
-                    </div>
-                </div>
-            </div>
-
-            <div id="step-2" class="step-content">
-                <h3>リアルタイム生成</h3>
-                <p class="mt-1">Gemini AIが周辺の歴史データベースと連携し、10秒以内にオリジナルのクエストを組み立てます。</p>
-                <div class="info-container mt-1">
-                    <button class="info-btn">ℹ️ 仕組み</button>
-                    <div class="info-panel">
-                        Google Maps PlatformのPOIデータと、Geminiの広範な知識を組み合わせ、その場所ならではの問いを作成します。
-                    </div>
-                </div>
-            </div>
-
-            <div id="step-3" class="step-content">
-                <h3>Vision AIによる判定</h3>
-                <p class="mt-1">撮影した写真をアップロードすると、Gemini Visionが内容を解析。正しい対象が写っているか即座に判定します。</p>
-                <div class="info-container mt-1">
-                    <button class="info-btn">ℹ️ 仕組み</button>
-                    <div class="info-panel">
-                        単なる位置情報だけでなく、「建物の特徴」や「彫刻の細部」など、目視に近い精度でクエスト達成を確認します。
-                    </div>
-                </div>
-            </div>
-
-            <div id="step-4" class="step-content">
-                <h3>深い歴史解説</h3>
-                <p class="mt-1">正解判定とともに、そのスポットにまつわる物語をAIが提供。街歩きが深い学習体験に変わります。</p>
-                <div class="info-container mt-1">
-                    <button class="info-btn">ℹ️ 仕組み</button>
-                    <div class="info-panel">
-                        ユーザーの習熟度や興味に合わせて解説を調整。歩けば歩くほど、あなたの「街の解像度」が上がっていきます。
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="walkthrough">
-        <div class="container">
-            <h2 class="text-center mb-2">クエスト体験の流れ</h2>
-            
-            <div class="chat-container">
-                <div class="ai-bubble chat-bubble">
-                    <strong>🤖 AIガイド</strong>
-                    <p>「👋 新しいクエスト発見！ 渋谷の隠れた明治遺産を探してみませんか？」</p>
-                </div>
-
-                <div class="ai-bubble chat-bubble">
-                    <strong>📜 クエスト内容</strong>
-                    <p>「渋谷駅のすぐ近くに、明治30年代に建てられた数少ない石造りの構造物があります。それを見つけて写真を撮ってください！」</p>
-                </div>
-
-                <div class="user-bubble chat-bubble">
-                    <strong>👤 プレイヤー</strong>
-                    <p>（あ、これかな？ 古い橋の柱っぽい...）</p>
-                    <div class="chat-img">📷 写真をアップロード中...</div>
-                </div>
-
-                <div class="ai-bubble chat-bubble">
-                    <strong>✅ クエスト達成！</strong>
-                    <p>「正解です！ これは1902年に竣工した旧稲荷橋の親柱です。当時の渋谷川の流れを今に伝える貴重な遺構なんですよ。」</p>
-                    <div class="info-container">
-                        <button class="info-btn">ℹ️ 判定の裏側</button>
-                        <div class="info-panel">
-                            Gemini Visionが「石造りの親柱」「特徴的な形状」を認識し、事前にQuest Plannerが設定した正解条件と合致するかを判定しています。
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="agents-section">
-        <div class="container">
-            <h2 class="text-center">4つのAIエージェント</h2>
-            <div class="agents-grid">
-                <div class="agent-card">
-                    <span class="agent-icon">🗺️</span>
-                    <h3>Quest Planner</h3>
-                    <p>クエストの設計・生成</p>
-                    <div class="info-container">
-                        <button class="info-btn">ℹ️ 詳細</button>
-                        <div class="info-panel">位置情報と歴史DBから「何を撮るか」「何を解くか」を企画する司令塔。</div>
-                    </div>
-                </div>
-                <div class="agent-card">
-                    <span class="agent-icon">🎙️</span>
-                    <h3>Quest Guide</h3>
-                    <p>ヒントと解説の提供</p>
-                    <div class="info-container">
-                        <button class="info-btn">ℹ️ 詳細</button>
-                        <div class="info-panel">Vision AIでユーザーの状況を把握し、詰まっているときはヒント、達成時は解説を担当。</div>
-                    </div>
-                </div>
-                <div class="agent-card">
-                    <span class="agent-icon">🛡️</span>
-                    <h3>Quest QA</h3>
-                    <p>品質と安全の番人</p>
-                    <div class="info-container">
-                        <button class="info-btn">ℹ️ 詳細</button>
-                        <div class="info-panel">生成されたクエストが私有地に入っていないか、差別的でないか、事実誤認がないかを検証。</div>
-                    </div>
-                </div>
-                <div class="agent-card">
-                    <span class="agent-icon">📈</span>
-                    <h3>Quest Ops</h3>
-                    <p>運営分析と改善</p>
-                    <div class="info-container">
-                        <button class="info-btn">ℹ️ 詳細</button>
-                        <div class="info-panel">ユーザーの反応を分析し、どの種類のクエストが好まれるかを学習。プロンプトを自動調整。</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="cta">
-        <div class="container">
-            <h2>街の物語を解き明かそう</h2>
-            <p class="mb-2 mt-1">TimeQuest Ops は開発中のプロジェクトです。</p>
-            <a href="#" class="cta-btn">GitHub で見る</a>
-            <p class="mt-2" style="font-size: 0.8rem; color: var(--text-muted);">※ このページ自体がプロジェクトのデモとして機能しています</p>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 TimeQuest Ops. Powered by Gemini AI.</p>
-        </div>
-    </footer>
+    </div>
 
     <script>
-        // Info Button Interactivity
-        document.querySelectorAll('.info-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const panel = btn.nextElementSibling;
-                const isVisible = panel.style.display === 'block';
-                
-                // Close all other panels in the same scope maybe? (Optional)
-                
-                panel.style.display = isVisible ? 'none' : 'block';
-                btn.textContent = isVisible ? 'ℹ️ 詳細' : '✖️ 閉じる';
-                
-                // Specific text for some buttons
-                if (btn.closest('.hero')) {
-                    btn.textContent = isVisible ? 'ℹ️ コンセプト詳細' : '✖️ 閉じる';
-                }
-                if (btn.closest('.phone-screen')) {
-                    btn.textContent = isVisible ? 'ℹ️ ゲーム画面について' : '✖️ 閉じる';
-                }
-                if (btn.closest('.step-content')) {
-                    btn.textContent = isVisible ? 'ℹ️ 仕組み' : '✖️ 閉じる';
-                }
-            });
-        });
+        const quests = [
+            { id: 1, name: "明治の名残", task: "赤レンガの記憶を探せ", fact: "この建物は1905年に建てられました", pos: { top: 20, left: 70 } },
+            { id: 2, name: "江戸の痕跡", task: "石畳の記憶を辿れ", fact: "この石畳は江戸時代から続く古道です", pos: { top: 60, left: 20 } },
+            { id: 3, name: "戦後の再生", task: "復興の象徴を撮れ", fact: "1952年、この建物は戦後復興のシンボルとして建設されました", pos: { top: 40, left: 50 } },
+        ];
 
-        // Step Tabs Interactivity
-        function showStep(stepNum) {
-            // Update tabs
-            document.querySelectorAll('.step-tab').forEach((tab, index) => {
-                if (index + 1 === stepNum) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
+        const stateDurations = [5000, 5000, 3000, 4000]; // Exploring, Found, Arrived, Clear
+        let currentQuestIndex = 0;
+        let currentState = 0;
+        let score = 0;
+        let distance = 150;
 
-            // Update content
-            document.querySelectorAll('.step-content').forEach((content, index) => {
-                if (index + 1 === stepNum) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
+        // Initialize Map Grid
+        const grid = document.getElementById('grid');
+        const pattern = [
+            'BBRRRRRGGG',
+            'BBRRRRRGGG',
+            'RRRRBBBRRR',
+            'GGGRRRRRRR',
+            'GGGRRRBBBR',
+            'RRRRRRBBBR',
+            'RRRRRRRRRR',
+            'BBRRRGGGRR',
+            'BBRRRGGGRR',
+            'RRRRRRRRRR'
+        ];
+
+        for (let r = 0; r < 10; r++) {
+            for (let c = 0; c < 10; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                const type = pattern[r][c];
+                if (type === 'R') cell.classList.add('road');
+                if (type === 'B') cell.classList.add('building');
+                grid.appendChild(cell);
+            }
         }
+
+        const player = document.getElementById('player');
+        const qMarker = document.getElementById('quest-marker');
+        const hudQuestName = document.getElementById('hud-quest-name');
+        const hudScore = document.getElementById('hud-score');
+        const qTitle = document.getElementById('quest-title');
+        const qStatus = document.getElementById('quest-status');
+        const qDesc = document.getElementById('quest-desc');
+        const pBarFill = document.getElementById('progress-bar-fill');
+        const pRight = document.getElementById('progress-right');
+        const pBarContainer = document.getElementById('progress-bar-container');
+        const celebration = document.getElementById('celebration');
+
+        function updateState() {
+            const quest = quests[currentQuestIndex];
+            
+            switch(currentState) {
+                case 0: // Exploring
+                    hudQuestName.textContent = "探索中...";
+                    qTitle.textContent = "🔍 クエスト探索中...";
+                    qStatus.textContent = "SEARCHING";
+                    qDesc.textContent = "周辺の歴史的スポットを探しています...";
+                    pBarFill.style.width = "0%";
+                    pRight.textContent = "0%";
+                    pBarContainer.classList.remove('scanning');
+                    qMarker.classList.remove('visible', 'cleared');
+                    // Move player to a random road-ish position
+                    player.style.top = "80%";
+                    player.style.left = "10%";
+                    break;
+
+                case 1: // Quest Found
+                    hudQuestName.textContent = quest.name;
+                    qTitle.textContent = "📜 Quest #" + quest.id + ": " + quest.name;
+                    qStatus.textContent = "ACTIVE";
+                    qDesc.textContent = quest.task;
+                    qMarker.style.top = quest.pos.top + "%";
+                    qMarker.style.left = quest.pos.left + "%";
+                    qMarker.classList.add('visible');
+                    
+                    // Move player towards quest
+                    player.style.top = quest.pos.top + "%";
+                    player.style.left = quest.pos.left + "%";
+
+                    // Distance countdown
+                    distance = 150;
+                    const distInterval = setInterval(() => {
+                        distance -= 30;
+                        if (distance <= 0) {
+                            distance = 0;
+                            clearInterval(distInterval);
+                        }
+                        qStatus.textContent = "📍 あと " + distance + "m";
+                        const progress = Math.min(100, Math.round(((150 - distance) / 150) * 100));
+                        pBarFill.style.width = progress + "%";
+                        pRight.textContent = progress + "%";
+                    }, 1000);
+                    break;
+
+                case 2: // Arrived
+                    qTitle.textContent = "📍 目的地に到着！";
+                    qStatus.textContent = "SCANNING";
+                    qDesc.textContent = "写真を解析中... 🔄";
+                    pBarContainer.classList.add('scanning');
+                    break;
+
+                case 3: // Clear
+                    qTitle.textContent = "✅ クエスト達成！";
+                    qStatus.textContent = "COMPLETE";
+                    qDesc.textContent = "✨ " + quest.fact;
+                    pBarContainer.classList.remove('scanning');
+                    pBarFill.style.width = "100%";
+                    pRight.textContent = "100%";
+                    qMarker.classList.add('cleared');
+                    
+                    // Score update
+                    score += 100;
+                    hudScore.textContent = score + " pts";
+                    hudScore.style.transform = "scale(1.2)";
+                    setTimeout(() => hudScore.style.transform = "scale(1)", 500);
+
+                    // Burst
+                    celebration.classList.add('active');
+                    setTimeout(() => celebration.classList.remove('active'), 1000);
+                    break;
+            }
+
+            setTimeout(nextState, stateDurations[currentState]);
+        }
+
+        function nextState() {
+            currentState++;
+            if (currentState > 3) {
+                currentState = 0;
+                currentQuestIndex = (currentQuestIndex + 1) % quests.length;
+            }
+            updateState();
+        }
+
+        // Start the loop
+        updateState();
+
     </script>
 </body>
 </html>
