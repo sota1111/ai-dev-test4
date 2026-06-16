@@ -1,0 +1,9 @@
+{
+  "appId": "com.sota1111.timequestops",
+  "appName": "TimeQuest Ops",
+  "webDir": "docs",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

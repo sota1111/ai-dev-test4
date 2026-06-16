@@ -1,460 +1,466 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeQuest Ops Demo</title>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --primary: #00d2ff;
-            --accent: #2dd4bf;
-            --text: #f1f5f9;
-            --text-dim: #94a3b8;
-            --road: #334155;
-            --building: #1e293b;
-            --green: #064e3b;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        /* Phone Frame */
-        .phone-frame {
-            width: 320px;
-            height: 640px;
-            border: 8px solid #334155;
-            border-radius: 36px;
-            overflow: hidden;
-            position: relative;
-            background-color: #000;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .phone-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            background-color: var(--bg);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Top HUD */
-        .hud-bar {
-            height: 40px;
-            background-color: rgba(15, 23, 42, 0.9);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 12px;
-            font-size: 12px;
-            font-weight: bold;
-            z-index: 10;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .hud-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .player-icon {
-            width: 20px;
-            height: 20px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-        }
-
-        .hud-center {
-            color: var(--primary);
-            max-width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .hud-right {
-            color: #fbbf24;
-        }
-
-        /* Map Area */
-        .map-container {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background-color: var(--green);
-        }
-
-        .map-grid {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            width: 100%;
-            height: 100%;
-        }
-
-        .cell {
-            border: 0.1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .cell.road { background-color: var(--road); }
-        .cell.building { background-color: var(--building); }
-
-        .player-marker {
-            position: absolute;
-            width: 32px;
-            height: 32px;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 4s linear;
-            z-index: 5;
-            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
-        }
-
-        .quest-marker {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            font-size: 18px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 4;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        .quest-marker.visible {
-            opacity: 1;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--primary)); }
-            50% { transform: scale(1.2); filter: drop-shadow(0 0 10px var(--primary)); }
-            100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--primary)); }
-        }
-
-        .quest-marker.cleared::after {
-            content: '✅';
-            position: absolute;
-            font-size: 14px;
-            top: -5px;
-            right: -5px;
-        }
-
-        /* Quest Card */
-        .quest-card {
-            height: 40%;
-            background-color: var(--card);
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
-            z-index: 10;
-            transform: translateY(0);
-            transition: transform 0.5s ease-out;
-        }
-
-        .quest-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .quest-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--text);
-        }
-
-        .quest-status {
-            font-size: 12px;
-            color: var(--accent);
-            background: rgba(45, 212, 191, 0.1);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        .quest-description {
-            font-size: 14px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            min-height: 40px;
-        }
-
-        .progress-container {
-            margin-top: auto;
-            margin-bottom: 10px;
-        }
-
-        .progress-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-bottom: 4px;
-            color: var(--text-dim);
-        }
-
-        .progress-bar-bg {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            transition: width 0.5s linear;
-        }
-
-        .celebration {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 40px;
-            pointer-events: none;
-            z-index: 20;
-            opacity: 0;
-        }
-
-        .celebration.active {
-            animation: burst 1s ease-out forwards;
-        }
-
-        @keyframes burst {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
-        }
-
-        /* Scanning effect */
-        .scanning .progress-bar-fill {
-            animation: scan 1.5s infinite;
-            width: 30% !important;
-        }
-
-        @keyframes scan {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(333%); }
-        }
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <title>TimeQuest Ops</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0f172a;
+      overflow: hidden;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      touch-action: none;
+    }
+    #app {
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+    #hud {
+      height: 48px;
+      background: rgba(15,23,42,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    #hud-title { color: #00d2ff; font-size: 14px; font-weight: bold; }
+    #hud-coords { color: #94a3b8; font-size: 11px; text-align: right; }
+    #map-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #map-canvas:active { cursor: grabbing; }
+    #info-panel {
+      background: #1e293b;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 16px 20px;
+      flex-shrink: 0;
+      min-height: 120px;
+      z-index: 10;
+    }
+    #info-title {
+      color: #f1f5f9;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    #info-desc {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    #gps-status {
+      position: absolute;
+      top: 60px;
+      right: 12px;
+      background: rgba(15,23,42,0.8);
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      z-index: 5;
+    }
+    #gps-status.active { color: #4ade80; }
+    #recenter-btn {
+      position: absolute;
+      bottom: 140px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      background: rgba(30,41,59,0.9);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 5;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
+<div id="app">
+  <div id="hud">
+    <div id="hud-title">🗺️ TimeQuest Ops</div>
+    <div id="hud-coords">---, ---</div>
+  </div>
+  <div id="map-wrap">
+    <canvas id="map-canvas"></canvas>
+    <div id="gps-status">📍 GPS取得中...</div>
+    <div id="recenter-btn" title="現在地に戻る">🎯</div>
+  </div>
+  <div id="info-panel">
+    <div id="info-title">📌 ランドマーク: 近くのスポット</div>
+    <div id="info-desc">タップまたはドラッグで地図を操作できます。現在地を取得中...</div>
+  </div>
+</div>
 
-    <div class="phone-frame">
-        <div class="phone-inner">
-            <!-- HUD -->
-            <div class="hud-bar">
-                <div class="hud-left">
-                    <div class="player-icon">🏃</div>
-                    <span>Explorer Lv.3</span>
-                </div>
-                <div class="hud-center" id="hud-quest-name">探索中...</div>
-                <div class="hud-right" id="hud-score">0 pts</div>
-            </div>
+<script>
+  // ── Constants ──────────────────────────────────────────────────────────────
+  const DEFAULT_LAT = 35.6762;
+  const DEFAULT_LNG = 139.6503;
+  const TILE_SIZE = 60;        // pixels per map tile
+  const MAP_COLS = 15;
+  const MAP_ROWS = 20;
+  const PLAYER_RADIUS = 12;
+  const LANDMARK_RADIUS = 14;
 
-            <!-- Map -->
-            <div class="map-container" id="map">
-                <div class="map-grid" id="grid"></div>
-                <div class="player-marker" id="player">🏃</div>
-                <div class="quest-marker" id="quest-marker">📌</div>
-                <div class="celebration" id="celebration">🎉</div>
-            </div>
+  // Colors
+  const CLR_BG      = '#1a3a2a';   // grass/ground
+  const CLR_ROAD    = '#334155';
+  const CLR_BUILDING= '#1e293b';
+  const CLR_PLAYER  = '#00d2ff';
+  const CLR_LANDMARK= '#f59e0b';
+  const CLR_GRID    = 'rgba(255,255,255,0.04)';
 
-            <!-- Quest Card -->
-            <div class="quest-card" id="quest-card">
-                <div class="quest-header">
-                    <div class="quest-title" id="quest-title">🔍 クエスト探索中...</div>
-                    <div class="quest-status" id="quest-status">READY</div>
-                </div>
-                <div class="quest-description" id="quest-desc">
-                    周辺の歴史的スポットを探しています...
-                </div>
-                <div class="progress-container">
-                    <div class="progress-labels">
-                        <span id="progress-left">進捗</span>
-                        <span id="progress-right">0%</span>
-                    </div>
-                    <div class="progress-bar-bg" id="progress-bar-container">
-                        <div class="progress-bar-fill" id="progress-bar-fill"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  // ── State ──────────────────────────────────────────────────────────────────
+  const canvas = document.getElementById('map-canvas');
+  const ctx = canvas.getContext('2d');
 
-    <script>
-        const quests = [
-            { id: 1, name: "明治の名残", task: "赤レンガの記憶を探せ", fact: "この建物は1905年に建てられました", pos: { top: 20, left: 70 } },
-            { id: 2, name: "江戸の痕跡", task: "石畳の記憶を辿れ", fact: "この石畳は江戸時代から続く古道です", pos: { top: 60, left: 20 } },
-            { id: 3, name: "戦後の再生", task: "復興の象徴を撮れ", fact: "1952年、この建物は戦後復興のシンボルとして建設されました", pos: { top: 40, left: 50 } },
-        ];
+  let playerLat = DEFAULT_LAT;
+  let playerLng = DEFAULT_LNG;
+  let gpsActive = false;
 
-        const stateDurations = [5000, 5000, 3000, 4000]; // Exploring, Found, Arrived, Clear
-        let currentQuestIndex = 0;
-        let currentState = 0;
-        let score = 0;
-        let distance = 150;
+  // Landmark is at a fixed offset from default center (approx. 100m NE)
+  const landmarkLat = DEFAULT_LAT + 0.0009;
+  const landmarkLng = DEFAULT_LNG + 0.0012;
+  const landmarkName = '謎の石碑';
 
-        // Initialize Map Grid
-        const grid = document.getElementById('grid');
-        const pattern = [
-            'BBRRRRRGGG',
-            'BBRRRRRGGG',
-            'RRRRBBBRRR',
-            'GGGRRRRRRR',
-            'GGGRRRBBBR',
-            'RRRRRRBBBR',
-            'RRRRRRRRRR',
-            'BBRRRGGGRR',
-            'BBRRRGGGRR',
-            'RRRRRRRRRR'
-        ];
+  // Camera offset in world pixels (panned by user)
+  let camOffX = 0;
+  let camOffY = 0;
 
-        for (let r = 0; r < 10; r++) {
-            for (let c = 0; c < 10; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                const type = pattern[r][c];
-                if (type === 'R') cell.classList.add('road');
-                if (type === 'B') cell.classList.add('building');
-                grid.appendChild(cell);
-            }
-        }
+  // Touch/drag state
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartCamX = 0;
+  let dragStartCamY = 0;
+  let touchStartTime = 0;
 
-        const player = document.getElementById('player');
-        const qMarker = document.getElementById('quest-marker');
-        const hudQuestName = document.getElementById('hud-quest-name');
-        const hudScore = document.getElementById('hud-score');
-        const qTitle = document.getElementById('quest-title');
-        const qStatus = document.getElementById('quest-status');
-        const qDesc = document.getElementById('quest-desc');
-        const pBarFill = document.getElementById('progress-bar-fill');
-        const pRight = document.getElementById('progress-right');
-        const pBarContainer = document.getElementById('progress-bar-container');
-        const celebration = document.getElementById('celebration');
+  // ── Map Layout ─────────────────────────────────────────────────────────────
+  // Procedural tile map (0=grass, 1=road, 2=building)
+  const tileMap = [];
+  const roadRows = [2, 3, 7, 8, 12, 13, 17, 18];
+  const roadCols = [1, 2, 5, 6, 9, 10, 13, 14];
+  for (let r = 0; r < MAP_ROWS; r++) {
+    tileMap[r] = [];
+    for (let c = 0; c < MAP_COLS; c++) {
+      if (roadRows.includes(r) || roadCols.includes(c)) {
+        tileMap[r][c] = 1; // road
+      } else {
+        tileMap[r][c] = 2; // building block
+      }
+    }
+  }
+  // Some open plazas
+  [[4,3],[4,4],[9,7],[9,8],[14,11],[14,12]].forEach(([r,c]) => { tileMap[r][c] = 0; });
 
-        function updateState() {
-            const quest = quests[currentQuestIndex];
-            
-            switch(currentState) {
-                case 0: // Exploring
-                    hudQuestName.textContent = "探索中...";
-                    qTitle.textContent = "🔍 クエスト探索中...";
-                    qStatus.textContent = "SEARCHING";
-                    qDesc.textContent = "周辺の歴史的スポットを探しています...";
-                    pBarFill.style.width = "0%";
-                    pRight.textContent = "0%";
-                    pBarContainer.classList.remove('scanning');
-                    qMarker.classList.remove('visible', 'cleared');
-                    // Move player to a random road-ish position
-                    player.style.top = "80%";
-                    player.style.left = "10%";
-                    break;
+  // ── Coordinate helpers ─────────────────────────────────────────────────────
+  const WORLD_W = MAP_COLS * TILE_SIZE;
+  const WORLD_H = MAP_ROWS * TILE_SIZE;
+  const ORIGIN_LAT = DEFAULT_LAT;
+  const ORIGIN_LNG = DEFAULT_LNG;
+  const LAT_SCALE  = 80000; // pixels per degree lat (approx 1/111000 * 1px)
+  const LNG_SCALE  = 65000; // pixels per degree lng at ~35°N
 
-                case 1: // Quest Found
-                    hudQuestName.textContent = quest.name;
-                    qTitle.textContent = "📜 Quest #" + quest.id + ": " + quest.name;
-                    qStatus.textContent = "ACTIVE";
-                    qDesc.textContent = quest.task;
-                    qMarker.style.top = quest.pos.top + "%";
-                    qMarker.style.left = quest.pos.left + "%";
-                    qMarker.classList.add('visible');
-                    
-                    // Move player towards quest
-                    player.style.top = quest.pos.top + "%";
-                    player.style.left = quest.pos.left + "%";
+  function latLngToWorld(lat, lng) {
+    const wx = WORLD_W / 2 + (lng - ORIGIN_LNG) * LNG_SCALE;
+    const wy = WORLD_H / 2 - (lat - ORIGIN_LAT) * LAT_SCALE;
+    return { wx, wy };
+  }
 
-                    // Distance countdown
-                    distance = 150;
-                    const distInterval = setInterval(() => {
-                        distance -= 30;
-                        if (distance <= 0) {
-                            distance = 0;
-                            clearInterval(distInterval);
-                        }
-                        qStatus.textContent = "📍 あと " + distance + "m";
-                        const progress = Math.min(100, Math.round(((150 - distance) / 150) * 100));
-                        pBarFill.style.width = progress + "%";
-                        pRight.textContent = progress + "%";
-                    }, 1000);
-                    break;
+  function worldToScreen(wx, wy) {
+    const cx = canvas.width  / 2;
+    const cy = canvas.height / 2;
+    return {
+      sx: cx + wx - camOffX,
+      sy: cy + wy - camOffY,
+    };
+  }
 
-                case 2: // Arrived
-                    qTitle.textContent = "📍 目的地に到着！";
-                    qStatus.textContent = "SCANNING";
-                    qDesc.textContent = "写真を解析中... 🔄";
-                    pBarContainer.classList.add('scanning');
-                    break;
+  function screenToWorld(sx, sy) {
+    const cx = canvas.width  / 2;
+    const cy = canvas.height / 2;
+    return {
+      wx: sx - cx + camOffX,
+      wy: sy - cy + camOffY,
+    };
+  }
 
-                case 3: // Clear
-                    qTitle.textContent = "✅ クエスト達成！";
-                    qStatus.textContent = "COMPLETE";
-                    qDesc.textContent = "✨ " + quest.fact;
-                    pBarContainer.classList.remove('scanning');
-                    pBarFill.style.width = "100%";
-                    pRight.textContent = "100%";
-                    qMarker.classList.add('cleared');
-                    
-                    // Score update
-                    score += 100;
-                    hudScore.textContent = score + " pts";
-                    hudScore.style.transform = "scale(1.2)";
-                    setTimeout(() => hudScore.style.transform = "scale(1)", 500);
+  // ── Resize ─────────────────────────────────────────────────────────────────
+  function resize() {
+    const wrap = document.getElementById('map-wrap');
+    canvas.width  = wrap.clientWidth  * window.devicePixelRatio;
+    canvas.height = wrap.clientHeight * window.devicePixelRatio;
+    canvas.style.width  = wrap.clientWidth  + 'px';
+    canvas.style.height = wrap.clientHeight + 'px';
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    draw();
+  }
 
-                    // Burst
-                    celebration.classList.add('active');
-                    setTimeout(() => celebration.classList.remove('active'), 1000);
-                    break;
-            }
+  // ── Drawing ────────────────────────────────────────────────────────────────
+  function draw() {
+    const W = canvas.width  / window.devicePixelRatio;
+    const H = canvas.height / window.devicePixelRatio;
 
-            setTimeout(nextState, stateDurations[currentState]);
-        }
+    ctx.clearRect(0, 0, W, H);
 
-        function nextState() {
-            currentState++;
-            if (currentState > 3) {
-                currentState = 0;
-                currentQuestIndex = (currentQuestIndex + 1) % quests.length;
-            }
-            updateState();
-        }
+    // Background
+    ctx.fillStyle = CLR_BG;
+    ctx.fillRect(0, 0, W, H);
 
-        // Start the loop
-        updateState();
+    // Draw tile map
+    for (let r = 0; r < MAP_ROWS; r++) {
+      for (let c = 0; c < MAP_COLS; c++) {
+        const wx = c * TILE_SIZE;
+        const wy = r * TILE_SIZE;
+        const { sx, sy } = worldToScreen(wx, wy);
+        const t = tileMap[r][c];
+        ctx.fillStyle = t === 1 ? CLR_ROAD : t === 2 ? CLR_BUILDING : CLR_BG;
+        ctx.fillRect(sx, sy, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+        // Grid lines
+        ctx.strokeStyle = CLR_GRID;
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(sx, sy, TILE_SIZE, TILE_SIZE);
+      }
+    }
 
-    </script>
+    // Draw landmark
+    const lmWorld = latLngToWorld(landmarkLat, landmarkLng);
+    const { sx: lsx, sy: lsy } = worldToScreen(lmWorld.wx, lmWorld.wy);
+    drawLandmark(lsx, lsy);
+
+    // Draw player
+    const plWorld = latLngToWorld(playerLat, playerLng);
+    const { sx: psx, sy: psy } = worldToScreen(plWorld.wx, plWorld.wy);
+    drawPlayer(psx, psy);
+
+    // Compass
+    drawCompass(W - 36, 36);
+  }
+
+  function drawPlayer(sx, sy) {
+    // Glow
+    const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, PLAYER_RADIUS * 2);
+    grad.addColorStop(0, 'rgba(0,210,255,0.4)');
+    grad.addColorStop(1, 'rgba(0,210,255,0)');
+    ctx.beginPath();
+    ctx.arc(sx, sy, PLAYER_RADIUS * 2, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Body
+    ctx.beginPath();
+    ctx.arc(sx, sy, PLAYER_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = CLR_PLAYER;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Icon
+    ctx.font = `${PLAYER_RADIUS}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏃', sx, sy);
+  }
+
+  function drawLandmark(sx, sy) {
+    // Pulse ring
+    ctx.beginPath();
+    ctx.arc(sx, sy, LANDMARK_RADIUS * 1.8, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(245,158,11,0.4)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Body
+    ctx.beginPath();
+    ctx.arc(sx, sy, LANDMARK_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = CLR_LANDMARK;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Icon
+    ctx.font = `${LANDMARK_RADIUS}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📌', sx, sy);
+
+    // Label
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillStyle = '#f1f5f9';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(landmarkName, sx, sy + LANDMARK_RADIUS + 4);
+  }
+
+  function drawCompass(cx, cy) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15,23,42,0.7)';
+    ctx.fill();
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillStyle = '#ef4444';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', cx, cy - 6);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px sans-serif';
+    ctx.fillText('S', cx, cy + 6);
+  }
+
+  // ── GPS ────────────────────────────────────────────────────────────────────
+  const gpsEl  = document.getElementById('gps-status');
+  const hudCoords = document.getElementById('hud-coords');
+  const infoDesc  = document.getElementById('info-desc');
+
+  function onGpsSuccess(pos) {
+    playerLat = pos.coords.latitude;
+    playerLng = pos.coords.longitude;
+    gpsActive = true;
+    gpsEl.className = 'active';
+    gpsEl.textContent = '📍 GPS取得済み';
+    hudCoords.textContent = `${playerLat.toFixed(5)}, ${playerLng.toFixed(5)}`;
+    updateLandmarkInfo();
+    draw();
+  }
+
+  function onGpsError(err) {
+    gpsEl.textContent = '📍 GPS無効 (デフォルト位置使用)';
+    infoDesc.textContent = `GPS権限が必要です (${err.message})。デフォルト位置 (東京) を使用中。`;
+    draw();
+  }
+
+  function startGps() {
+    if (!navigator.geolocation) {
+      gpsEl.textContent = '📍 GPS非対応';
+      return;
+    }
+    navigator.geolocation.watchPosition(onGpsSuccess, onGpsError, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000,
+    });
+  }
+
+  function updateLandmarkInfo() {
+    const dist = getDistanceM(playerLat, playerLng, landmarkLat, landmarkLng);
+    document.getElementById('info-title').textContent = `📌 ランドマーク: ${landmarkName}`;
+    infoDesc.textContent = `現在地から約 ${Math.round(dist)}m。タッチで地図を操作できます。`;
+  }
+
+  function getDistanceM(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // ── Touch / Mouse events ───────────────────────────────────────────────────
+  function getEventPos(e) {
+    if (e.touches && e.touches.length > 0) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.offsetX, y: e.offsetY };
+  }
+
+  function onPointerDown(e) {
+    e.preventDefault();
+    const pos = getEventPos(e);
+    isDragging = true;
+    dragStartX = pos.x;
+    dragStartY = pos.y;
+    dragStartCamX = camOffX;
+    dragStartCamY = camOffY;
+    touchStartTime = Date.now();
+  }
+
+  function onPointerMove(e) {
+    e.preventDefault();
+    if (!isDragging) return;
+    const pos = getEventPos(e);
+    camOffX = dragStartCamX - (pos.x - dragStartX);
+    camOffY = dragStartCamY - (pos.y - dragStartY);
+    draw();
+  }
+
+  function onPointerUp(e) {
+    e.preventDefault();
+    const elapsed = Date.now() - touchStartTime;
+    const pos = getEventPos(e);
+    const dx = Math.abs(pos.x - dragStartX);
+    const dy = Math.abs(pos.y - dragStartY);
+
+    // Tap (not drag): move player toward tap point
+    if (elapsed < 300 && dx < 10 && dy < 10) {
+      const { wx, wy } = screenToWorld(pos.x, pos.y);
+      // Convert world pixel to lat/lng
+      playerLat = ORIGIN_LAT - (wy - WORLD_H / 2) / LAT_SCALE;
+      playerLng = ORIGIN_LNG + (wx - WORLD_W / 2) / LNG_SCALE;
+      updateLandmarkInfo();
+      hudCoords.textContent = `${playerLat.toFixed(5)}, ${playerLng.toFixed(5)}`;
+      draw();
+    }
+    isDragging = false;
+  }
+
+  canvas.addEventListener('mousedown',  onPointerDown, { passive: false });
+  canvas.addEventListener('mousemove',  onPointerMove, { passive: false });
+  canvas.addEventListener('mouseup',    onPointerUp,   { passive: false });
+  canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+  canvas.addEventListener('touchmove',  onPointerMove, { passive: false });
+  canvas.addEventListener('touchend',   onPointerUp,   { passive: false });
+
+  // Recenter button
+  document.getElementById('recenter-btn').addEventListener('click', () => {
+    camOffX = 0;
+    camOffY = 0;
+    draw();
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  window.addEventListener('resize', resize);
+  resize();
+  startGps();
+  draw();
+
+  // Animate landmark pulse
+  let frame = 0;
+  function animate() {
+    frame++;
+    if (frame % 60 === 0) draw(); // Redraw every second for pulse effect
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
 </body>
 </html>
